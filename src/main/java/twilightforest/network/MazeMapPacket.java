@@ -17,17 +17,25 @@ import java.util.function.Supplier;
 public class MazeMapPacket {
 
 	private final ClientboundMapItemDataPacket inner;
+	private final boolean ore;
+	private final int yCenter;
 
-	public MazeMapPacket(ClientboundMapItemDataPacket inner) {
+	public MazeMapPacket(ClientboundMapItemDataPacket inner, boolean ore, int yCenter) {
 		this.inner = inner;
+		this.ore = ore;
+		this.yCenter = yCenter;
 	}
 
 	public MazeMapPacket(FriendlyByteBuf buf) {
 		this.inner = new ClientboundMapItemDataPacket(buf);
+		this.ore = buf.readBoolean();
+		this.yCenter = buf.readVarInt();
 	}
 
 	public void encode(FriendlyByteBuf buf) {
 		this.inner.write(buf);
+		buf.writeBoolean(ore);
+		buf.writeVarInt(yCenter);
 	}
 
 	public static class Handler {
@@ -45,7 +53,8 @@ public class MazeMapPacket {
 						mapdata = new TFMazeMapData(0, 0, message.inner.getScale(), false, false, message.inner.isLocked(), Minecraft.getInstance().level.dimension());
 						TFMazeMapData.registerMazeMapData(Minecraft.getInstance().level, mapdata, s);
 					}
-
+					mapData.yCenter = message.yCenter;
+					mapData.ore = message.ore;
 					message.inner.applyToMap(mapdata);
 					mapitemrenderer.update(message.inner.getMapId(), mapdata);
 				}
